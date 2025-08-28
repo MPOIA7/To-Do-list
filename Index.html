@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="تطبيق إدارة المهام الذكي - PWA مع مزامنة Firebase وذكاء اصطناعي">
+    <meta name="theme-color" content="#6366f1">
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    
+    <title>TaskMaster Pro - مدير المهام الذكي</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- SortableJS for Drag & Drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loader">
+            <div class="loader-circle"></div>
+            <p>جاري التحميل...</p>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app" class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M20 12V18C20 19.1046 19.1046 20 18 20H6C4.89543 20 4 19.1046 4 18V6C4 4.89543 4.89543 4 6 4H15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1>TaskMaster Pro</h1>
+                        <p class="tagline">مدير المهام الذكي</p>
+                    </div>
+                </div>
+                
+                <div class="header-actions">
+                    <!-- User Auth Section -->
+                    <div id="authSection" class="auth-section">
+                        <button id="loginBtn" class="btn btn-primary">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="currentColor"/>
+                            </svg>
+                            <span>تسجيل الدخول</span>
+                        </button>
+                        <div id="userInfo" class="user-info hidden">
+                            <img id="userAvatar" class="user-avatar" alt="User Avatar">
+                            <span id="userName"></span>
+                            <button id="logoutBtn" class="btn btn-text">خروج</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Sync Button -->
+                    <button id="syncBtn" class="btn btn-icon" title="مزامنة البيانات">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" fill="currentColor"/>
+                        </svg>
+                    </button>
+                    
+                    <!-- Notifications Button -->
+                    <button id="notificationBtn" class="btn btn-icon" title="الإشعارات">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="currentColor"/>
+                        </svg>
+                        <span id="notificationBadge" class="badge hidden">0</span>
+                    </button>
+                    
+                    <!-- Dark Mode Toggle -->
+                    <button id="themeToggle" class="btn btn-icon" title="تبديل المظهر">
+                        <svg id="themeIcon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill"></div>
+            </div>
+        </header>
+
+        <!-- Stats Dashboard -->
+        <section class="stats-dashboard">
+            <div class="stat-card">
+                <div class="stat-icon total">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <h3 id="totalTasks">0</h3>
+                    <p>إجمالي المهام</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon active">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <h3 id="activeTasks">0</h3>
+                    <p>مهام نشطة</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon completed">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <h3 id="completedTasks">0</h3>
+                    <p>مهام مكتملة</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon overdue">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <h3 id="overdueTasks">0</h3>
+                    <p>مهام متأخرة</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Task Input Section -->
+            <section class="task-input-section card">
+                <h2>إضافة مهمة جديدة</h2>
+                <form id="taskForm" class="task-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="taskTitle">عنوان المهمة *</label>
+                            <input type="text" id="taskTitle" class="form-input" placeholder="أدخل عنوان المهمة..." required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="taskCategory">الفئة</label>
+                            <select id="taskCategory" class="form-select">
+                                <option value="personal">شخصي</option>
+                                <option value="work">عمل</option>
+                                <option value="shopping">تسوق</option>
+                                <option value="health">صحة</option>
+                                <option value="education">تعليم</option>
+                                <option value="other">أخرى</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="taskPriority">الأولوية</label>
+                            <select id="taskPriority" class="form-select">
+                                <option value="low">منخفضة</option>
+                                <option value="medium" selected>متوسطة</option>
+                                <option value="high">عالية</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="taskDueDate">تاريخ الاستحقاق</label>
+                            <input type="datetime-local" id="taskDueDate" class="form-input">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="taskDescription">الوصف</label>
+                        <textarea id="taskDescription" class="form-textarea" rows="3" placeholder="أضف وصفاً للمهمة..."></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" fill="currentColor"/>
+                            </svg>
+                            إضافة المهمة
+                        </button>
+                        
+                        <button type="button" id="aiSplitBtn" class="btn btn-secondary">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z" fill="currentColor"/>
+                            </svg>
+                            تقسيم بالذكاء الاصطناعي
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Filters Section -->
+            <section class="filters-section card">
+                <div class="search-box">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="search-icon">
+                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor"/>
+                    </svg>
+                    <input type="text" id="searchInput" class="search-input" placeholder="البحث في المهام...">
+                </div>
+                
+                <div class="filter-tabs">
+                    <button class="filter-tab active" data-filter="all">الكل</button>
+                    <button class="filter-tab" data-filter="active">النشطة</button>
+                    <button class="filter-tab" data-filter="completed">المكتملة</button>
+                    <button class="filter-tab" data-filter="today">اليوم</button>
+                    <button class="filter-tab" data-filter="week">هذا الأسبوع</button>
+                    <button class="filter-tab" data-filter="overdue">المتأخرة</button>
+                </div>
+                
+                <div class="category-filters">
+                    <button class="category-chip" data-category="all">
+                        <span class="chip-icon">🏷️</span>
+                        الكل
+                    </button>
+                    <button class="category-chip" data-category="personal">
+                        <span class="chip-icon">👤</span>
+                        شخصي
+                    </button>
+                    <button class="category-chip" data-category="work">
+                        <span class="chip-icon">💼</span>
+                        عمل
+                    </button>
+                    <button class="category-chip" data-category="shopping">
+                        <span class="chip-icon">🛒</span>
+                        تسوق
+                    </button>
+                    <button class="category-chip" data-category="health">
+                        <span class="chip-icon">🏥</span>
+                        صحة
+                    </button>
+                    <button class="category-chip" data-category="education">
+                        <span class="chip-icon">📚</span>
+                        تعليم
+                    </button>
+                </div>
+            </section>
+
+            <!-- Tasks List -->
+            <section class="tasks-section card">
+                <div class="section-header">
+                    <h2>قائمة المهام</h2>
+                    <div class="view-options">
+                        <button class="view-btn active" data-view="list" title="عرض قائمة">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                        <button class="view-btn" data-view="grid" title="عرض شبكة">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M3 3v8h8V3H3zm6 6H5V5h4v4zm-6 4v8h8v-8H3zm6 6H5v-4h4v4zm4-16v8h8V3h-8zm6 6h-4V5h4v4zm-6 4v8h8v-8h-8zm6 6h-4v-4h4v4z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="tasksList" class="tasks-list">
+                    <!-- Tasks will be rendered here -->
+                </div>
+                
+                <div id="emptyState" class="empty-state">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" fill="currentColor" opacity="0.3"/>
+                    </svg>
+                    <h3>لا توجد مهام</h3>
+                    <p>ابدأ بإضافة مهمتك الأولى!</p>
+                </div>
+            </section>
+
+            <!-- Action Buttons -->
+            <section class="action-buttons">
+                <button id="exportBtn" class="btn btn-outline">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/>
+                    </svg>
+                    تصدير البيانات
+                </button>
+                
+                <button id="importBtn" class="btn btn-outline">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z" fill="currentColor"/>
+                    </svg>
+                    استيراد البيانات
+                </button>
+                <input type="file" id="importFile" accept=".json" style="display: none;">
+                
+                <button id="clearCompletedBtn" class="btn btn-outline btn-danger">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" fill="currentColor"/>
+                    </svg>
+                    مسح المكتملة
+                </button>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>© 2024 TaskMaster Pro - جميع الحقوق محفوظة</p>
+            <p class="version">الإصدار 2.0.0 PWA</p>
+        </footer>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>تعديل المهمة</h3>
+                <button class="modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editTaskId">
+                    <div class="form-group">
+                        <label for="editTitle">العنوان</label>
+                        <input type="text" id="editTitle" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editDescription">الوصف</label>
+                        <textarea id="editDescription" class="form-textarea" rows="3"></textarea>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="editCategory">الفئة</label>
+                            <select id="editCategory" class="form-select">
+                                <option value="personal">شخصي</option>
+                                <option value="work">عمل</option>
+                                <option value="shopping">تسوق</option>
+                                <option value="health">صحة</option>
+                                <option value="education">تعليم</option>
+                                <option value="other">أخرى</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editPriority">الأولوية</label>
+                            <select id="editPriority" class="form-select">
+                                <option value="low">منخفضة</option>
+                                <option value="medium">متوسطة</option>
+                                <option value="high">عالية</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editDueDate">تاريخ الاستحقاق</label>
+                            <input type="datetime-local" id="editDueDate" class="form-input">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditModal()">إلغاء</button>
+                <button class="btn btn-primary" onclick="saveEditedTask()">حفظ التغييرات</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="firebase-config.js"></script>
+    <script src="app.js" defer></script>
+    <script src="ai-proxy.js" defer></script>
+</body>
+</html>
