@@ -1,0 +1,114 @@
+{
+  "name": "TaskMaster Pro - مدير المهام الذكي",
+  "short_name": "TaskMaster",
+  "description": "تطبيق إدارة المهام الذكي مع مزامنة Firebase وذكاء اصطناعي",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "icons/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshots/mobile-1.png",
+      "sizes": "360x800",
+      "type": "image/png",
+      "label": "الصفحة الرئيسية"
+    },
+    {
+      "src": "screenshots/mobile-2.png",
+      "sizes": "360x800",
+      "type": "image/png",
+      "label": "قائمة المهام"
+    },
+    {
+      "src": "screenshots/desktop-1.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "label": "واجهة سطح المكتب"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "shortcuts": [
+    {
+      "name": "إضافة مهمة جديدة",
+      "short_name": "مهمة جديدة",
+      "description": "إضافة مهمة جديدة بسرعة",
+      "url": "/?action=new-task",
+      "icons": [
+        {
+          "src": "icons/add-task.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "المهام اليوم",
+      "short_name": "اليوم",
+      "description": "عرض مهام اليوم",
+      "url": "/?filter=today",
+      "icons": [
+        {
+          "src": "icons/today.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false,
+  "scope": "/",
+  "id": "taskmaster-pro-v2"
+}
